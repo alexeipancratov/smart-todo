@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SmartTodo.Business\SmartTodo.Business.csproj" />
     <ProjectReference Include="..\SmartTodo.Domain\SmartTodo.Domain.csproj" />
   </ItemGroup>
 
