@@ -8,7 +8,7 @@ namespace SmartTodo.Data
     {
         public DbSet<TodoItem> TodoItems { get; set; }
 
-        public string DbPath { get; set; }
+        private string DbPath { get; set; }
 
         public SmartTodoDbContext()
         {
