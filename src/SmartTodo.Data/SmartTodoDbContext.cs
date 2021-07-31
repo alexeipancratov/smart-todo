@@ -12,6 +12,17 @@ namespace SmartTodo.Data
 
         public SmartTodoDbContext()
         {
+            SetupDbPath();
+        }
+
+        public SmartTodoDbContext(DbContextOptions opt)
+            : base(opt)
+        {
+            SetupDbPath();
+        }
+
+        private void SetupDbPath()
+        {
             var folder = Environment.SpecialFolder.LocalApplicationData;
             var path = Environment.GetFolderPath(folder);
 
@@ -20,7 +31,10 @@ namespace SmartTodo.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite($"Data Source={DbPath}");
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlite($"Data Source={DbPath}");
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
