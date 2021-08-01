@@ -14,6 +14,8 @@ namespace SmartTodo.Api
 {
     public class Startup
     {
+        readonly string UiCorsPolicy = "_myAllowSpecificOrigins";
+        
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -24,6 +26,15 @@ namespace SmartTodo.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: UiCorsPolicy, builder =>
+                {
+                    builder.WithOrigins("http://localhost:3000");
+                    builder.WithMethods("GET", "POST", "PUT", "DELETE");
+                    builder.WithHeaders("*");
+                });
+            });
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -45,10 +56,11 @@ namespace SmartTodo.Api
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SmartTodo.Api v1"));
             }
-
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            
+            app.UseCors(UiCorsPolicy);
 
             app.UseAuthorization();
 
