@@ -1,19 +1,21 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using SmartTodo.Business;
 using SmartTodo.Domain;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using SmartTodo.Api.Models;
 using SmartTodo.Business.Models;
 
 namespace SmartTodo.Api.Controllers
 {
     [Route("api/todos")]
     [ApiController]
-    public class TodoController : ControllerBase
+    public class TodosController : ControllerBase
     {
         private readonly ITodoService _todoService;
 
-        public TodoController(ITodoService todoService)
+        public TodosController(ITodoService todoService)
         {
             _todoService = todoService;
         }
@@ -27,12 +29,12 @@ namespace SmartTodo.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post(TodoItem todoItem)
+        public async Task<ActionResult> Post(CreateTodoItemRequestViewModel todoItem)
         {
             var createRequest = new CreateTodoItemRequest
             {
                 Title = todoItem.Title,
-                DateTimeCreated = todoItem.DateTimeCreated
+                DateTimeCreated = DateTime.Now
             };
             var operationResponse = await _todoService.CreateAsync(createRequest);
 
@@ -45,7 +47,7 @@ namespace SmartTodo.Api.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult> Put(TodoItem todoItem)
+        public async Task<ActionResult> Put(UpdateTodoItemRequestViewModel todoItem)
         {
             var updateRequest = new UpdateTodoItemRequest
             {
