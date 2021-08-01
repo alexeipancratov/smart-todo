@@ -79,5 +79,20 @@ namespace SmartTodo.Business
 
             return new OperationResponse<TodoItem>(todoItem);
         }
+
+        public async Task<OperationResponse<string>> DeleteAsync(string id)
+        {
+            TodoItem todoItem = await _dbContext.TodoItems.FindAsync(id);
+
+            if (todoItem == null)
+            {
+                return new OperationResponse<string>(new[] {"Todo item not found."});
+            }
+            
+            _dbContext.Remove(todoItem);
+            await _dbContext.SaveChangesAsync();
+
+            return new OperationResponse<string>(id);
+        }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using SmartTodo.Business;
 using SmartTodo.Domain;
 using System.Collections.Generic;
@@ -56,6 +55,19 @@ namespace SmartTodo.Api.Controllers
                 IsCompleted = todoItem.IsCompleted
             };
             var operationResponse = await _todoService.UpdateAsync(updateRequest);
+
+            if (operationResponse.IsValid)
+            {
+                return Ok(operationResponse.Result);
+            }
+
+            return BadRequest(operationResponse.Errors);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> Delete(string id)
+        {
+            var operationResponse = await _todoService.DeleteAsync(id);
 
             if (operationResponse.IsValid)
             {
