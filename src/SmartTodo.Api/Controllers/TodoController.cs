@@ -44,5 +44,25 @@ namespace SmartTodo.Api.Controllers
 
             return BadRequest(operationResponse.Errors);
         }
+
+        [HttpPut]
+        public async Task<ActionResult> Put(TodoItem todoItem)
+        {
+            var updateRequest = new UpdateTodoItemRequest
+            {
+                Id = todoItem.Id,
+                Title = todoItem.Title,
+                DateTimeCompleted = todoItem.DateTimeCompleted,
+                IsCompleted = todoItem.IsCompleted
+            };
+            var operationResponse = await _todoService.UpdateAsync(updateRequest);
+
+            if (operationResponse.IsValid)
+            {
+                return Ok(operationResponse.Result);
+            }
+
+            return BadRequest(operationResponse.Errors);
+        }
     }
 }

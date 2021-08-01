@@ -10,5 +10,7 @@ namespace SmartTodo.Business
         Task<OperationResponse<TodoItem>> CreateAsync(CreateTodoItemRequest todoItemRequest);
 
         Task<List<TodoItem>> GetAllAsync();
+
+        Task<OperationResponse<TodoItem>> UpdateAsync(UpdateTodoItemRequest updateTodoItemRequest);
     }
 }

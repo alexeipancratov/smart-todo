@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using SmartTodo.Data;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
         private TodoService _todoService;
         private Mock<ILogger<TodoService>> _todoILoggerMock;
         private Mock<IValidator<CreateTodoItemRequest>> _createValidatorMock;
+        private Mock<IValidator<UpdateTodoItemRequest>> _updateValidatorMock;
         private SmartTodoDbContext _dbContext;
 
         [SetUp]
@@ -28,8 +30,13 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
 
             _todoILoggerMock = new Mock<ILogger<TodoService>>();
             _createValidatorMock = new Mock<IValidator<CreateTodoItemRequest>>();
+            _updateValidatorMock = new Mock<IValidator<UpdateTodoItemRequest>>();
 
-            _todoService = new TodoService(_todoILoggerMock.Object, _dbContext, _createValidatorMock.Object);
+            _todoService = new TodoService(
+                _todoILoggerMock.Object,
+                _dbContext,
+                _createValidatorMock.Object,
+                _updateValidatorMock.Object);
         }
 
         [TearDown]
@@ -51,7 +58,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             
             // Assert
             Assert.IsFalse(operationResponse.IsValid);
-            Assert.IsNotEmpty(operationResponse.Errors);
+            Assert.AreEqual(1, operationResponse.Errors.Count());
         }
 
         [Test]
@@ -66,7 +73,8 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             var operationResponse = await _todoService.CreateAsync(new CreateTodoItemRequest());
 
             // Assert
-            Assert.That(!string.IsNullOrWhiteSpace(operationResponse.Result.Id));
+            Assert.IsTrue(operationResponse.IsValid);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(operationResponse.Result.Id));
             var count = await _dbContext.TodoItems.CountAsync();
             Assert.AreEqual(1, count);
         }

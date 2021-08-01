@@ -18,6 +18,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
         private TodoService _todoService;
         private Mock<ILogger<TodoService>> _todoILoggerMock;
         private Mock<IValidator<CreateTodoItemRequest>> _createValidatorMock;
+        private Mock<IValidator<UpdateTodoItemRequest>> _updateValidatorMock;
         private SmartTodoDbContext _dbContext;
 
         [SetUp]
@@ -36,8 +37,13 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
 
             _todoILoggerMock = new Mock<ILogger<TodoService>>();
             _createValidatorMock = new Mock<IValidator<CreateTodoItemRequest>>();
+            _updateValidatorMock = new Mock<IValidator<UpdateTodoItemRequest>>();
 
-            _todoService = new TodoService(_todoILoggerMock.Object, _dbContext, _createValidatorMock.Object);
+            _todoService = new TodoService(
+                _todoILoggerMock.Object,
+                _dbContext,
+                _createValidatorMock.Object,
+                _updateValidatorMock.Object);
         }
 
         [TearDown]
