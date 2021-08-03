@@ -13,7 +13,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
     public abstract class BaseTodoServiceTests
     {
         protected TodoService TodoService;
-        private Mock<ILogger<TodoService>> TodoILoggerMock;
+        protected Mock<ILogger<TodoService>> TodoILoggerMock;
         protected Mock<ITimeProvider> TimeProviderMock;
         protected Mock<IValidator<CreateTodoItemRequest>> CreateValidatorMock;
         protected Mock<IValidator<UpdateTodoItemRequest>> UpdateValidatorMock;
