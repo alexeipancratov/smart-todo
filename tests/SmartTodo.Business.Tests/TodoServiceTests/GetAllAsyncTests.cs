@@ -1,65 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FluentValidation;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
 using NUnit.Framework;
-using SmartTodo.Business.Infrastructure;
-using SmartTodo.Business.Models;
-using SmartTodo.Data;
 using SmartTodo.Domain;
 
 namespace SmartTodo.Business.Tests.TodoServiceTests
 {
     [TestFixture]
-    public class GetAllAsyncTests
+    public class GetAllAsyncTests : BaseTodoServiceTests
     {
-        private TodoService _todoService;
-        private Mock<ILogger<TodoService>> _todoILoggerMock;
-        private Mock<ITimeProvider> _timeProviderMock;
-        private Mock<IValidator<CreateTodoItemRequest>> _createValidatorMock;
-        private Mock<IValidator<UpdateTodoItemRequest>> _updateValidatorMock;
-        private SmartTodoDbContext _dbContext;
-
         [SetUp]
-        public async Task Setup()
+        public override void SetUp()
         {
-            var builder = new DbContextOptionsBuilder();
-            builder.UseInMemoryDatabase("todos");
-            _dbContext = new SmartTodoDbContext(builder.Options);
-            await _dbContext.Database.EnsureDeletedAsync();
-            
-            _dbContext.TodoItems.AddRange(
+            base.SetUp();
+            DbContext.TodoItems.AddRange(
                 new TodoItem { Id = Guid.NewGuid().ToString(), Title = "Task 1" },
                 new TodoItem { Id = Guid.NewGuid().ToString(), Title = "Task 2" },
                 new TodoItem { Id = Guid.NewGuid().ToString(), Title = "Task 3" });
-            await _dbContext.SaveChangesAsync();
-
-            _todoILoggerMock = new Mock<ILogger<TodoService>>();
-            _timeProviderMock = new Mock<ITimeProvider>();
-            _createValidatorMock = new Mock<IValidator<CreateTodoItemRequest>>();
-            _updateValidatorMock = new Mock<IValidator<UpdateTodoItemRequest>>();
-
-            _todoService = new TodoService(
-                _todoILoggerMock.Object,
-                _timeProviderMock.Object,
-                _dbContext,
-                _createValidatorMock.Object,
-                _updateValidatorMock.Object);
-        }
-
-        [TearDown]
-        public ValueTask CleanUp()
-        {
-            return _dbContext.DisposeAsync();
+            DbContext.SaveChanges();
         }
 
         [Test]
         public async Task GivenThreeRecordsInDb_ShouldReturnAllThreeRecords()
         {
-            List<TodoItem> todoItems = await _todoService.GetAllAsync();
+            List<TodoItem> todoItems = await TodoService.GetAllAsync();
             
             Assert.AreEqual(3, todoItems.Count);
         }

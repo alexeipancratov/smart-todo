@@ -2,28 +2,17 @@
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
-using SmartTodo.Data;
 using System.Threading.Tasks;
-using FluentValidation;
 using FluentValidation.Results;
-using Microsoft.Extensions.Logging;
 using Moq;
-using SmartTodo.Business.Infrastructure;
 using SmartTodo.Business.Models;
 using SmartTodo.Domain;
 
 namespace SmartTodo.Business.Tests.TodoServiceTests
 {
     [TestFixture]
-    public class UpdateAsyncTests
+    public class UpdateAsyncTests : BaseTodoServiceTests
     {
-        private TodoService _todoService;
-        private Mock<ILogger<TodoService>> _todoILoggerMock;
-        private Mock<ITimeProvider> _timeProviderMock;
-        private Mock<IValidator<CreateTodoItemRequest>> _createValidatorMock;
-        private Mock<IValidator<UpdateTodoItemRequest>> _updateValidatorMock;
-        private SmartTodoDbContext _dbContext;
-
         private readonly TodoItem _existingTodoItem = new TodoItem
         {
             Id = Guid.NewGuid().ToString(),
@@ -34,46 +23,24 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
         };
 
         [SetUp]
-        public async Task Setup()
+        public override void SetUp()
         {
-            var builder = new DbContextOptionsBuilder();
-            builder.UseInMemoryDatabase("todos");
-            _dbContext = new SmartTodoDbContext(builder.Options);
-            await _dbContext.Database.EnsureDeletedAsync();
-
-            _dbContext.TodoItems.Add(_existingTodoItem);
-            await _dbContext.SaveChangesAsync();
-            _dbContext.Entry(_existingTodoItem).State = EntityState.Detached;
-
-            _todoILoggerMock = new Mock<ILogger<TodoService>>();
-            _timeProviderMock = new Mock<ITimeProvider>();
-            _createValidatorMock = new Mock<IValidator<CreateTodoItemRequest>>();
-            _updateValidatorMock = new Mock<IValidator<UpdateTodoItemRequest>>();
-
-            _todoService = new TodoService(
-                _todoILoggerMock.Object,
-                _timeProviderMock.Object,
-                _dbContext,
-                _createValidatorMock.Object,
-                _updateValidatorMock.Object);
-        }
-
-        [TearDown]
-        public ValueTask CleanUp()
-        {
-            return _dbContext.DisposeAsync();
+            base.SetUp();
+            DbContext.TodoItems.Add(_existingTodoItem);
+            DbContext.SaveChanges();
+            DbContext.Entry(_existingTodoItem).State = EntityState.Detached;
         }
 
         [Test]
         public async Task GivenValidationErrors_ShouldReturnResponseWithAnError()
         {
             // Arrange
-            _updateValidatorMock
+            UpdateValidatorMock
                 .Setup(m => m.ValidateAsync(It.IsAny<UpdateTodoItemRequest>(), default))
                 .ReturnsAsync(new ValidationResult(new[] { new ValidationFailure("Title", "Title is required") }));
 
             // Act
-            var operationResponse = await _todoService.UpdateAsync(new UpdateTodoItemRequest());
+            var operationResponse = await TodoService.UpdateAsync(new UpdateTodoItemRequest());
             
             // Assert
             Assert.IsFalse(operationResponse.IsValid);
@@ -84,7 +51,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
         public async Task GivenValidTodoItemWithNonExistingId_ShouldReturnResponseWithErrors()
         {
             // Arrange
-            _updateValidatorMock
+            UpdateValidatorMock
                 .Setup(m => m.ValidateAsync(It.IsAny<UpdateTodoItemRequest>(), default))
                 .ReturnsAsync(new ValidationResult());
             
@@ -96,7 +63,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             };
 
             // Act
-            var operationResponse = await _todoService.UpdateAsync(updateRequest);
+            var operationResponse = await TodoService.UpdateAsync(updateRequest);
             
             // Assert
             Assert.IsFalse(operationResponse.IsValid);
@@ -107,7 +74,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
         public async Task GivenCorrectTodoItem_ShouldUpdateInDbAndReturnFullyUpdatedItem()
         {
             // Arrange
-            _updateValidatorMock
+            UpdateValidatorMock
                 .Setup(m => m.ValidateAsync(It.IsAny<UpdateTodoItemRequest>(), default))
                 .ReturnsAsync(new ValidationResult());
 
@@ -119,11 +86,11 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             };
 
             // Act
-            var operationResponse = await _todoService.UpdateAsync(updateRequest);
+            var operationResponse = await TodoService.UpdateAsync(updateRequest);
 
             // Assert
             Assert.IsTrue(operationResponse.IsValid);
-            var updatedTodoItem = await _dbContext.TodoItems.FindAsync(_existingTodoItem.Id);
+            var updatedTodoItem = await DbContext.TodoItems.FindAsync(_existingTodoItem.Id);
             Assert.AreEqual(updateRequest.IsCompleted, updatedTodoItem.IsCompleted);
             Assert.AreNotEqual(default(DateTime), updatedTodoItem.DateTimeCreated);
         }
@@ -132,7 +99,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
         public async Task GivenCorrectTodoItem_ShouldReturnUpdatedTodoItem()
         {
             // Arrange
-            _updateValidatorMock
+            UpdateValidatorMock
                 .Setup(m => m.ValidateAsync(It.IsAny<UpdateTodoItemRequest>(), default))
                 .ReturnsAsync(new ValidationResult());
                 
@@ -144,7 +111,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             };
 
             // Act
-            var operationResponse = await _todoService.UpdateAsync(updateRequest);
+            var operationResponse = await TodoService.UpdateAsync(updateRequest);
 
             // Assert
             Assert.IsTrue(operationResponse.IsValid);
@@ -156,10 +123,10 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
         {
             // Arrange
             var currentTime = new DateTime(2021, 8, 2);
-            _updateValidatorMock
+            UpdateValidatorMock
                 .Setup(m => m.ValidateAsync(It.IsAny<UpdateTodoItemRequest>(), default))
                 .ReturnsAsync(new ValidationResult());
-            _timeProviderMock.Setup(m => m.GetCurrentServerTime()).Returns(currentTime);
+            TimeProviderMock.Setup(m => m.GetCurrentServerTime()).Returns(currentTime);
                 
             var updateRequest = new UpdateTodoItemRequest
             {
@@ -169,7 +136,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             };
 
             // Act
-            var operationResponse = await _todoService.UpdateAsync(updateRequest);
+            var operationResponse = await TodoService.UpdateAsync(updateRequest);
 
             // Assert
             Assert.AreEqual(currentTime, operationResponse.Result.DateTimeCompleted);
