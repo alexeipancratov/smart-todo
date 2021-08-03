@@ -8,6 +8,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Moq;
+using SmartTodo.Business.Infrastructure;
 using SmartTodo.Business.Models;
 using SmartTodo.Domain;
 
@@ -18,6 +19,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
     {
         private TodoService _todoService;
         private Mock<ILogger<TodoService>> _todoILoggerMock;
+        private Mock<ITimeProvider> _timeProviderMock;
         private Mock<IValidator<CreateTodoItemRequest>> _createValidatorMock;
         private Mock<IValidator<UpdateTodoItemRequest>> _updateValidatorMock;
         private SmartTodoDbContext _dbContext;
@@ -44,11 +46,13 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             _dbContext.Entry(_existingTodoItem).State = EntityState.Detached;
 
             _todoILoggerMock = new Mock<ILogger<TodoService>>();
+            _timeProviderMock = new Mock<ITimeProvider>();
             _createValidatorMock = new Mock<IValidator<CreateTodoItemRequest>>();
             _updateValidatorMock = new Mock<IValidator<UpdateTodoItemRequest>>();
 
             _todoService = new TodoService(
                 _todoILoggerMock.Object,
+                _timeProviderMock.Object,
                 _dbContext,
                 _createValidatorMock.Object,
                 _updateValidatorMock.Object);
@@ -88,8 +92,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             {
                 Id = Guid.NewGuid().ToString(),
                 Title = _existingTodoItem.Title,
-                IsCompleted = true,
-                DateTimeCompleted = DateTime.Now
+                IsCompleted = true
             };
 
             // Act
@@ -112,8 +115,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             {
                 Id = _existingTodoItem.Id,
                 Title = _existingTodoItem.Title,
-                IsCompleted = true,
-                DateTimeCompleted = DateTime.Now
+                IsCompleted = true
             };
 
             // Act
@@ -133,13 +135,12 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             _updateValidatorMock
                 .Setup(m => m.ValidateAsync(It.IsAny<UpdateTodoItemRequest>(), default))
                 .ReturnsAsync(new ValidationResult());
-
+                
             var updateRequest = new UpdateTodoItemRequest
             {
                 Id = _existingTodoItem.Id,
                 Title = _existingTodoItem.Title,
-                IsCompleted = true,
-                DateTimeCompleted = DateTime.Now
+                IsCompleted = true
             };
 
             // Act
@@ -148,6 +149,30 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             // Assert
             Assert.IsTrue(operationResponse.IsValid);
             Assert.AreEqual(updateRequest.IsCompleted, operationResponse.Result.IsCompleted);
+        }
+        
+        [Test]
+        public async Task GivenCompletedTodoItemWhichWasNotCompletedBefore_ShouldSetCorrectDateTimeCompleted()
+        {
+            // Arrange
+            var currentTime = new DateTime(2021, 8, 2);
+            _updateValidatorMock
+                .Setup(m => m.ValidateAsync(It.IsAny<UpdateTodoItemRequest>(), default))
+                .ReturnsAsync(new ValidationResult());
+            _timeProviderMock.Setup(m => m.GetCurrentServerTime()).Returns(currentTime);
+                
+            var updateRequest = new UpdateTodoItemRequest
+            {
+                Id = _existingTodoItem.Id,
+                Title = _existingTodoItem.Title,
+                IsCompleted = true
+            };
+
+            // Act
+            var operationResponse = await _todoService.UpdateAsync(updateRequest);
+
+            // Assert
+            Assert.AreEqual(currentTime, operationResponse.Result.DateTimeCompleted);
         }
     }
 }

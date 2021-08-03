@@ -8,6 +8,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Moq;
+using SmartTodo.Business.Infrastructure;
 using SmartTodo.Business.Models;
 using SmartTodo.Domain;
 
@@ -18,6 +19,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
     {
         private TodoService _todoService;
         private Mock<ILogger<TodoService>> _todoILoggerMock;
+        private Mock<ITimeProvider> _timeProviderMock;
         private Mock<IValidator<CreateTodoItemRequest>> _createValidatorMock;
         private Mock<IValidator<UpdateTodoItemRequest>> _updateValidatorMock;
         private SmartTodoDbContext _dbContext;
@@ -44,11 +46,13 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             _dbContext.Entry(_existingTodoItem).State = EntityState.Detached;
 
             _todoILoggerMock = new Mock<ILogger<TodoService>>();
+            _timeProviderMock = new Mock<ITimeProvider>();
             _createValidatorMock = new Mock<IValidator<CreateTodoItemRequest>>();
             _updateValidatorMock = new Mock<IValidator<UpdateTodoItemRequest>>();
 
             _todoService = new TodoService(
                 _todoILoggerMock.Object,
+                _timeProviderMock.Object,
                 _dbContext,
                 _createValidatorMock.Object,
                 _updateValidatorMock.Object);

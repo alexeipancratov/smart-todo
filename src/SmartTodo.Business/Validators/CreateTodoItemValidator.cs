@@ -9,7 +9,6 @@ namespace SmartTodo.Business.Validators
         public CreateTodoItemValidator()
         {
             RuleFor(t => t.Title).NotEmpty();
-            RuleFor(t => t.DateTimeCreated).NotEqual(DateTime.MinValue);
         }
     }
 }

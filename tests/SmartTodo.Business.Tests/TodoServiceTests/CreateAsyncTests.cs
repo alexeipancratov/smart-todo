@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using SmartTodo.Data;
@@ -7,6 +8,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Moq;
+using SmartTodo.Business.Infrastructure;
 using SmartTodo.Business.Models;
 
 namespace SmartTodo.Business.Tests.TodoServiceTests
@@ -16,6 +18,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
     {
         private TodoService _todoService;
         private Mock<ILogger<TodoService>> _todoILoggerMock;
+        private Mock<ITimeProvider> _timeProviderMock;
         private Mock<IValidator<CreateTodoItemRequest>> _createValidatorMock;
         private Mock<IValidator<UpdateTodoItemRequest>> _updateValidatorMock;
         private SmartTodoDbContext _dbContext;
@@ -29,11 +32,13 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             _dbContext.Database.EnsureDeleted();
 
             _todoILoggerMock = new Mock<ILogger<TodoService>>();
+            _timeProviderMock = new Mock<ITimeProvider>();
             _createValidatorMock = new Mock<IValidator<CreateTodoItemRequest>>();
             _updateValidatorMock = new Mock<IValidator<UpdateTodoItemRequest>>();
 
             _todoService = new TodoService(
                 _todoILoggerMock.Object,
+                _timeProviderMock.Object,
                 _dbContext,
                 _createValidatorMock.Object,
                 _updateValidatorMock.Object);
@@ -83,9 +88,11 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
         public async Task GivenCorrectTodoItem_ShouldReturnValidOperationResponse()
         {
             // Arrange
+            var currentTime = new DateTime(2021, 8, 2);
             _createValidatorMock
                 .Setup(m => m.ValidateAsync(It.IsAny<CreateTodoItemRequest>(), default))
                 .ReturnsAsync(new ValidationResult());
+            _timeProviderMock.Setup(m => m.GetCurrentServerTime()).Returns(currentTime);
 
             // Act
             var operationResponse = await _todoService.CreateAsync(new CreateTodoItemRequest());
@@ -93,6 +100,7 @@ namespace SmartTodo.Business.Tests.TodoServiceTests
             // Assert
             Assert.IsTrue(operationResponse.IsValid);
             Assert.IsNotNull(operationResponse.Result);
+            Assert.AreEqual(currentTime, operationResponse.Result.DateTimeCreated);
         }
     }
 }

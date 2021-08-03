@@ -33,8 +33,7 @@ namespace SmartTodo.Api.Controllers
         {
             var createRequest = new CreateTodoItemRequest
             {
-                Title = todoItem.Title,
-                DateTimeCreated = DateTime.Now
+                Title = todoItem.Title
             };
             var operationResponse = await _todoService.CreateAsync(createRequest);
 
@@ -53,7 +52,6 @@ namespace SmartTodo.Api.Controllers
             {
                 Id = todoItem.Id,
                 Title = todoItem.Title,
-                DateTimeCompleted = todoItem.DateTimeCompleted,
                 IsCompleted = todoItem.IsCompleted
             };
             var operationResponse = await _todoService.UpdateAsync(updateRequest);

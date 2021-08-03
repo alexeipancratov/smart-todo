@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using SmartTodo.Business;
+using SmartTodo.Business.Infrastructure;
 using SmartTodo.Business.Models;
 using SmartTodo.Business.Validators;
 using SmartTodo.Data;
@@ -43,6 +44,7 @@ namespace SmartTodo.Api
 
             services.AddDbContext<SmartTodoDbContext>();
             services.AddScoped<ITodoService, TodoService>();
+            services.AddScoped<ITimeProvider, TimeProvider>();
             services.AddScoped<IValidator<CreateTodoItemRequest>, CreateTodoItemValidator>();
             services.AddScoped<IValidator<UpdateTodoItemRequest>, UpdateTodoItemValidator>();
         }
