@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SmartTodo.Business;
 using SmartTodo.Domain;
 using System.Collections.Generic;
@@ -71,7 +70,7 @@ namespace SmartTodo.Api.Controllers
 
             if (operationResponse.IsValid)
             {
-                return Ok(operationResponse.Result);
+                return Ok(new {Id = operationResponse.Result});
             }
 
             return BadRequest(operationResponse.Errors);
